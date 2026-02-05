@@ -1,12 +1,16 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
 
-    public static event System.Action<DamageEvent> OnDamageDealt;
+    public static GameManager Instance;
 
-    public static event System.Action<PokemonStats> OnBattleEnded;
+    //public static event System.Action<DamageEvent> OnDamageDealt;
+    //public static event System.Action<PokemonStats> OnBattleEnded;
+    private List<IBattleEventObserver> observers =
+        new List<IBattleEventObserver>();
 
     public PokemonLoader loader;
     
@@ -16,6 +20,41 @@ public class GameManager : MonoBehaviour
     private PokemonStats p1;
     [SerializeField]
     private PokemonStats p2;
+
+
+
+    public void RegisterObserver(IBattleEventObserver observer)
+    {
+        if (!observers.Contains(observer))
+            observers.Add(observer);
+    }
+
+    public void RemoveObserver(IBattleEventObserver observer)
+    {
+        if (observers.Contains(observer))
+            observers.Remove(observer);
+    }
+
+
+     void NotifyDamage(DamageEvent e)
+    {
+        for (int i = 0; i < observers.Count; i++)
+            observers[i].OnDamageEvent(e);
+    }
+
+    void NotifyBattleEnd(PokemonStats winner)
+    {
+        for (int i = 0; i < observers.Count; i++)
+            observers[i].OnBattleEndEvent(winner);
+    }
+
+    private void Awake()
+    {
+        if(Instance == null)
+        {
+            Instance = this;
+        }
+    }
 
     void Start()
     {
@@ -96,20 +135,14 @@ public class GameManager : MonoBehaviour
         if (p1.IsDead)
         {
             winner = p2.name;
-            if (OnBattleEnded != null)
-            {
-                OnBattleEnded(p2);
-            }
+            NotifyBattleEnd(p2);
                 
         }      
         else
         {
             
             winner = p1.name;
-            if (OnBattleEnded != null)
-            {
-                OnBattleEnded(p1);
-            }
+           NotifyBattleEnd(p1);
                 
         }
 
@@ -129,9 +162,8 @@ public class GameManager : MonoBehaviour
 
         defender.currentHP -= damage;
         Debug.Log(attacker.name + " hits " + defender.name + " for " + damage);
-
-         if (OnDamageDealt != null)
-            OnDamageDealt(new DamageEvent(attacker, defender, damage));
+        
+        NotifyDamage(new DamageEvent(attacker, defender, damage));
 
         yield return new WaitForSeconds(3f);
     }

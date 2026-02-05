@@ -11,3 +11,9 @@ public class DamageEvent
         this.damage = damage;
     }
 }
+
+public interface IBattleEventObserver
+{
+    void OnDamageEvent(DamageEvent damageEvent);
+    void OnBattleEndEvent(PokemonStats winner);
+}

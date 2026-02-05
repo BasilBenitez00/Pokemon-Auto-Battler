@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIManager : MonoBehaviour
+public class UIManager : MonoBehaviour, IBattleEventObserver
 {
     [Header("Pokemon 1 UI")]
     public Image p1Sprite;
@@ -34,14 +34,19 @@ public class UIManager : MonoBehaviour
 
     void OnEnable()
     {
-        GameManager.OnDamageDealt += OnDamageDealt;
-        GameManager.OnBattleEnded += HandleWinner;
+        //GameManager.OnDamageDealt += OnDamageDealt;
+        //GameManager.OnBattleEnded += HandleWinner;
+
+        GameManager.Instance.RegisterObserver(this);
     }
 
     void OnDisable()
     {
-        GameManager.OnDamageDealt -= OnDamageDealt;
-        GameManager.OnBattleEnded -= HandleWinner;
+        //GameManager.OnDamageDealt -= OnDamageDealt;
+        //GameManager.OnBattleEnded -= HandleWinner;
+
+        GameManager.Instance.RemoveObserver(this);
+    
     }
 
     // ---------------- PUBLIC API ----------------
@@ -87,7 +92,7 @@ public class UIManager : MonoBehaviour
             sprite.sprite = stats.sprite;
     }
 
-    void OnDamageDealt(DamageEvent damageEvent)
+    public void OnDamageEvent(DamageEvent damageEvent)
     {
         if (damageEvent.defender == p1Stats)
         {
@@ -101,7 +106,7 @@ public class UIManager : MonoBehaviour
         damageText.text = damageEvent.attacker.name.ToUpper() + " dealt " + damageEvent.damage + " damage to " + damageEvent.defender.name.ToUpper() + "!";
     }
 
-    void HandleWinner(PokemonStats winner)
+    public void OnBattleEndEvent(PokemonStats winner)
     {
         damageText.text = "";
         if (winnerPanel != null)
